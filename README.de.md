@@ -1,4 +1,4 @@
-# Concerto
+<p align="center"><img src="assets/banner.png" alt="Concerto — Opus conducts, Sonnets play." width="100%"></p>
 
 **Opus dirigiert, Sonnets spielen.**
 
