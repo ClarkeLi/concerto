@@ -1,6 +1,4 @@
-# Concerto
-
-**Opus conducts, Sonnets play.**
+<p align="center"><img src="assets/banner.png" alt="Concerto — Opus conducts, Sonnets play." width="100%"></p>
 
 English · [简体中文](README.zh-CN.md) · [Deutsch](README.de.md)
 

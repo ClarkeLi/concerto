@@ -1,4 +1,4 @@
-# Concerto（协奏曲）
+<p align="center"><img src="assets/banner.png" alt="Concerto — Opus conducts, Sonnets play." width="100%"></p>
 
 **Opus 指挥，Sonnet 演奏。**
 
