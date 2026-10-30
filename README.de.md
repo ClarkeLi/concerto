@@ -4,7 +4,7 @@
 
 [English](README.md) · [简体中文](README.zh-CN.md) · Deutsch
 
-Concerto macht aus [Claude Code](https://claude.com/claude-code) eine automatische, parallele Coding-Pipeline. Du wirfst einfach weiter Ideen ein: Opus plant sie, mehrere Sonnet-Agenten setzen sie nebeneinander in isolierten Git-Worktrees um, ein unabhängiger Verifier prüft jedes Ergebnis, und am Ende wird alles zusammengeführt – ohne dass du daneben sitzen musst.
+Concerto macht aus [Claude Code](https://claude.com/claude-code) eine automatische, parallele Coding-Pipeline. Du wirfst einfach weiter Ideen ein: Opus plant sie, mehrere Sonnet-Agenten setzen sie nebeneinander in isolierten Git-Worktrees um, jedes Ergebnis wird geprüft (kleine Karten kurz von Opus, der Rest gebündelt von einem unabhängigen Verifier), und am Ende wird alles zusammengeführt – ohne dass du daneben sitzen musst.
 
 Gebaut für Menschen, deren Ideen nie aufhören (ADHS-freundlich von Anfang an): Eine Idee festzuhalten kostet einen kurzen Befehl, den ganzen Stapel abzuarbeiten einen weiteren.
 
@@ -25,11 +25,12 @@ Ideen → │ Opus         │  Recherche, Aufgabenkarten, Abhängigkeitsgraph
                │ startet jede Karte, deren Abhängigkeiten erfüllt sind (max. 4 gleichzeitig)
      ┌─────────┼──────────┐
      ▼         ▼          ▼
- executor   executor   executor      Sonnet, je ein Git-Worktree
+ executor   executor   executor      Sonnet (Haiku für S-Karten), je ein Git-Worktree
      │         │          │
      ▼         ▼          ▼
- verifier   verifier   verifier      Sonnet, unabhängig, nur lesend
-     └─────────┼──────────┘
+ ┌───────────────────────────┐
+ │ Prüfung                   │      S-Karten: kurzer Diff-Check durch Opus
+ └─────────────┬─────────────┘      M/L: ein Sonnet-Verifier pro ≤3 Karten
                ▼ PASS → Merge nach concerto/<plan-id>, Tests laufen
         ┌──────────────┐
         │ Ausgangsbranch│  Fast-Forward nur, wenn alles grün ist
@@ -37,7 +38,8 @@ Ideen → │ Opus         │  Recherche, Aufgabenkarten, Abhängigkeitsgraph
 ```
 
 - **Abhängigkeitsgesteuerte Planung.** Eine Karte startet, sobald ihre Abhängigkeiten gemergt sind – kein Warten auf eine ganze Welle. Karten, die dieselben Dateien ändern, laufen nie gleichzeitig.
-- **Verifikation als Pipeline.** Jedes Executor-Ergebnis wird sofort geprüft und gemergt. Eine durchgefallene Karte wird mit den konkreten Korrekturhinweisen des Verifiers zweimal wiederholt, danach übernimmt Opus selbst.
+- **Verifikation als Pipeline, sparsam mit Tokens.** Jedes Executor-Ergebnis wird sofort geprüft und gemergt. Kleine, einfache Karten prüft Opus kurz anhand des Diffs; alle anderen prüft ein unabhängiger, nur lesender Verifier, der bis zu 3 Karten pro Lauf übernimmt – so fallen die Startkosten eines neuen Agenten nicht für jede Karte an. Eine durchgefallene Karte wird mit den konkreten Korrekturhinweisen des Verifiers zweimal wiederholt, danach übernimmt Opus selbst.
+- **Weniger Kaltstarts.** Die Recon wird einmal in den `Context`-Abschnitt des Plans geschrieben, sodass nicht jeder Agent das Repo neu erkundet; serielle Ketten kleiner Karten werden zu einer Karte, und eine durch einen Merge freigegebene Karte geht an den Executor, der den Code schon kennt. Der Token-Verbrauch pro Agent wird protokolliert und von `/encore` summiert.
 - **Mehrere Runden.** Ideen, die du während einer Runde hinzufügst, werden automatisch in der nächsten Runde aufgegriffen – bis zu 3 Runden in Folge. So kannst du in einem zweiten Terminal weiter erfassen.
 - **Fortsetzbar.** Der gesamte Zustand liegt in `.claude/work/<plan-id>/plan.md` und `log.md`; nach einer Unterbrechung macht `/da-capo` weiter.
 - **Standardmäßig sicher.** Concerto pusht nie und erzwingt nie etwas (kein Force). Gearbeitet wird auf `concerto/<plan-id>`; zurückgemergt wird nur bei grünen Tests, sonst bleibt der Stand dort zur Prüfung liegen.
@@ -69,7 +71,7 @@ Das Installationsskript kopiert zwei Agenten, vier Skills, ein Hook-Skript und e
 
 Entfernen mit `./uninstall.sh` (Projektdaten in `.claude/work/` und die Backups bleiben erhalten).
 
-Starte `/opus` am besten in einer **Opus**-Sitzung für die beste Planungsqualität; Executors und Verifier nutzen immer Sonnet.
+Starte `/opus` am besten in einer **Opus**-Sitzung für die beste Planungsqualität; Executors nutzen Sonnet (Haiku für kleine `S`-Karten beim ersten Versuch; Wiederholungen laufen mit Sonnet), Verifier immer Sonnet.
 
 ## Projektdaten
 

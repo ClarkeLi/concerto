@@ -2,7 +2,7 @@
 
 English · [简体中文](README.zh-CN.md) · [Deutsch](README.de.md)
 
-Concerto turns [Claude Code](https://claude.com/claude-code) into an automatic, parallel coding pipeline. You keep dropping ideas; Opus plans them, several Sonnet agents implement them side by side in isolated git worktrees, an independent verifier checks every result, and everything is merged back — without you babysitting it.
+Concerto turns [Claude Code](https://claude.com/claude-code) into an automatic, parallel coding pipeline. You keep dropping ideas; Opus plans them, several Sonnet agents implement them side by side in isolated git worktrees, every result is verified (small cards by Opus, the rest by a batched independent verifier), and everything is merged back — without you babysitting it.
 
 It was built for people whose ideas never stop coming (ADHD-friendly by design): capturing an idea costs one short command, and processing the whole pile costs one more.
 
@@ -23,11 +23,12 @@ ideas → │ Opus         │  recon, task cards, dependency graph
                │ dispatches every card whose dependencies are met (max 4 at once)
      ┌─────────┼──────────┐
      ▼         ▼          ▼
- executor   executor   executor      Sonnet, one git worktree each
+ executor   executor   executor      Sonnet (Haiku for S cards), one git worktree each
      │         │          │
      ▼         ▼          ▼
- verifier   verifier   verifier      Sonnet, independent, read-only
-     └─────────┼──────────┘
+ ┌───────────────────────────┐
+ │ verify                    │      S cards: quick diff check by Opus
+ └─────────────┬─────────────┘      M/L: one Sonnet verifier per ≤3 cards
                ▼ PASS → merge into concerto/<plan-id>, run tests
         ┌──────────────┐
         │ base branch  │  fast-forward only when everything is green
@@ -35,7 +36,8 @@ ideas → │ Opus         │  recon, task cards, dependency graph
 ```
 
 - **Dependency-driven scheduling.** A card starts the moment its dependencies are merged; no waiting for a whole wave. Cards that touch the same files are never run together.
-- **Pipelined verification.** Every executor result is verified and merged as soon as it returns. A failed card is retried with the verifier's concrete fix instructions (twice), then Opus takes over.
+- **Pipelined, token-lean verification.** Every executor result is verified and merged as soon as it returns. Small, simple cards get a quick diff check by Opus; the rest are reviewed by an independent, read-only verifier that handles up to 3 cards per run, so you don't pay a fresh agent's startup cost for every card. A failed card is retried with the verifier's concrete fix instructions (twice), then Opus takes over.
+- **Fewer cold starts.** Recon is written once into the plan's `Context` section, so agents don't each re-survey the repo; serial chains of small cards become one card, and a card unblocked by a merge goes to the executor that already knows the code. Token use per agent is logged and summed by `/encore`.
 - **Multi-round.** Ideas you add while a round is running are picked up automatically in the next round, up to 3 rounds in a row, so you can keep capturing from a second terminal.
 - **Resumable.** All state lives in `.claude/work/<plan-id>/plan.md` and `log.md`; `/da-capo` resumes after an interruption.
 - **Safe by default.** Concerto never pushes and never forces. Work happens on `concerto/<plan-id>` and is merged back only when the tests pass; otherwise it stays there for you to inspect.
@@ -67,7 +69,7 @@ The installer copies two agents, four skills, a hook script and a plan template 
 
 Remove it with `./uninstall.sh` (your project data in `.claude/work/` and the backups are left alone).
 
-Run `/opus` in an **Opus** session for the best planning quality; the executors and verifiers always use Sonnet.
+Run `/opus` in an **Opus** session for the best planning quality; executors use Sonnet (Haiku for small `S` cards on their first try; retries move to Sonnet) and verifiers always use Sonnet.
 
 ## Project data
 

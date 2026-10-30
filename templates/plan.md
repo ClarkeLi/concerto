@@ -12,11 +12,14 @@
 ## Goal
 <the user's words + one or two sentences of clarified understanding>
 
+## Context
+<from recon, at most 15 lines: key files and what they hold, entry points, conventions not obvious from the code, how to run tests>
+
 ## Tasks
 
 ### T1 · <title>
 - status: todo        # todo | running | verifying | done | failed | blocked
-- size: S             # S(<30 lines) | M | L
+- size: S             # S(<30 lines, no tricky logic → Opus light check) | M | L (→ batched verifier)
 - deps: []
 - wave: 1
 - files: [src/a.ts, tests/a.test.ts]
@@ -28,6 +31,7 @@
 - verify: `<command>`
 - attempts: 0
 - branch:
+- base:              # commit the card's own diff starts from (executor's BASE)
 - result:
 
 ## Waves
