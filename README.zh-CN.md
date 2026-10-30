@@ -4,7 +4,7 @@
 
 [English](README.md) · 简体中文 · [Deutsch](README.de.md)
 
-Concerto 把 [Claude Code](https://claude.com/claude-code) 变成一条自动、并行的编码流水线。你只管不断丢想法：Opus 负责规划，多个 Sonnet 在各自独立的 git worktree 里并行实现，独立的 verifier 逐个验收，最后全部自动合并，不需要你盯着。
+Concerto 把 [Claude Code](https://claude.com/claude-code) 变成一条自动、并行的编码流水线。你只管不断丢想法：Opus 负责规划，多个 Sonnet 在各自独立的 git worktree 里并行实现，小卡由 Opus 快速检查、其余卡由独立 verifier 批量验收，最后全部自动合并，不需要你盯着。
 
 它是为"想法停不下来"的人设计的（对 ADHD 友好）：记录一个想法只要一条很短的命令，处理整堆想法只要再一条。
 
@@ -25,11 +25,12 @@ Concerto 把 [Claude Code](https://claude.com/claude-code) 变成一条自动、
                │ 依赖满足的任务卡立即派发（最多同时 4 个）
      ┌─────────┼──────────┐
      ▼         ▼          ▼
- executor   executor   executor      Sonnet，各用一个 git worktree
+ executor   executor   executor      Sonnet（S 卡用 Haiku），各用一个 git worktree
      │         │          │
      ▼         ▼          ▼
- verifier   verifier   verifier      Sonnet，独立、只读
-     └─────────┼──────────┘
+ ┌───────────────────────────┐
+ │ 验收                      │      S 卡：Opus 快速看 diff
+ └─────────────┬─────────────┘      M/L 卡：每 ≤3 张一个 Sonnet verifier
                ▼ 通过 → 合并到 concerto/<plan-id> 并跑测试
         ┌──────────────┐
         │ 原分支       │  全部通过后才 fast-forward 合回
@@ -37,7 +38,7 @@ Concerto 把 [Claude Code](https://claude.com/claude-code) 变成一条自动、
 ```
 
 - **依赖驱动调度**：一张卡的依赖一合并就立刻开工，不必等整个波次。会改同一批文件的卡不会同时运行。
-- **流水线式验收**：每个 executor 一返回就验收、合并。失败的卡会带着 verifier 给出的具体修复指示重试两次，之后由 Opus 亲自接手。
+- **流水线式、省 token 的验收**：每个 executor 一返回就验收、合并。简单的小卡由 Opus 快速看一遍 diff；其余卡交给独立、只读的 verifier，一个 verifier 一次最多审 3 张，不必每张卡都付一次新 agent 的启动开销。失败的卡会带着 verifier 给出的具体修复指示重试两次，之后由 Opus 亲自接手。
 - **多轮续跑**：一轮运行期间新增的想法，会在下一轮自动接上，最多连续 3 轮，所以你可以在另一个终端继续记录。
 - **可续跑**：所有状态都在 `.claude/work/<plan-id>/plan.md` 和 `log.md` 里，中断后用 `/da-capo` 继续。
 - **默认安全**：Concerto 绝不 push、绝不 force。工作在 `concerto/<plan-id>` 分支上进行，测试全部通过才会合回；否则停在该分支，留给你检查。
@@ -69,7 +70,7 @@ cd concerto
 
 用 `./uninstall.sh` 卸载（项目里的 `.claude/work/` 数据和备份文件不会被删除）。
 
-建议在 **Opus** 会话里运行 `/opus` 以获得最佳规划质量；executor 和 verifier 始终使用 Sonnet。
+建议在 **Opus** 会话里运行 `/opus` 以获得最佳规划质量；executor 使用 Sonnet（S 小卡第一次用 Haiku，重试时改用 Sonnet），verifier 始终使用 Sonnet。
 
 ## 项目数据
 

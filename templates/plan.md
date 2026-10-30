@@ -16,7 +16,7 @@
 
 ### T1 · <title>
 - status: todo        # todo | running | verifying | done | failed | blocked
-- size: S             # S(<30 lines) | M | L
+- size: S             # S(<30 lines, no tricky logic → Opus light check) | M | L (→ batched verifier)
 - deps: []
 - wave: 1
 - files: [src/a.ts, tests/a.test.ts]
