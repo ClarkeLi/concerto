@@ -39,6 +39,7 @@ Concerto 把 [Claude Code](https://claude.com/claude-code) 变成一条自动、
 
 - **依赖驱动调度**：一张卡的依赖一合并就立刻开工，不必等整个波次。会改同一批文件的卡不会同时运行。
 - **流水线式、省 token 的验收**：每个 executor 一返回就验收、合并。简单的小卡由 Opus 快速看一遍 diff；其余卡交给独立、只读的 verifier，一个 verifier 一次最多审 3 张，不必每张卡都付一次新 agent 的启动开销。失败的卡会带着 verifier 给出的具体修复指示重试两次，之后由 Opus 亲自接手。
+- **更少冷启动**：recon 结果只写一次，放进 plan 的 `Context` 段，agent 不必各自重新摸索仓库；小卡组成的串行链合并成一张卡；某张卡合并后解锁的下一张卡，交给已经熟悉这部分代码的 executor 接着做。每个 agent 的 token 用量记入日志，由 `/encore` 汇总。
 - **多轮续跑**：一轮运行期间新增的想法，会在下一轮自动接上，最多连续 3 轮，所以你可以在另一个终端继续记录。
 - **可续跑**：所有状态都在 `.claude/work/<plan-id>/plan.md` 和 `log.md` 里，中断后用 `/da-capo` 继续。
 - **默认安全**：Concerto 绝不 push、绝不 force。工作在 `concerto/<plan-id>` 分支上进行，测试全部通过才会合回；否则停在该分支，留给你检查。

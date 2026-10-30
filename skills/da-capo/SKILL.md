@@ -12,7 +12,7 @@ You are the orchestrator (Opus). Arguments: $ARGUMENTS
 
 ## Restore state
 1. Read plan.md. Skip `done` cards.
-2. For `running` / `verifying` cards: check whether the matching branch (or a worktree from `git worktree list`) already has a `concerto(<task-id>)` commit. If yes → go straight to verification (S card: your light check; otherwise the verify queue); if no → reset the card to `todo`.
+2. For `running` / `verifying` cards: check whether the matching branch (or a worktree from `git worktree list`) already has a `concerto(<task-id>)` commit. If yes → go straight to verification (S card: your light check; otherwise the verify queue), using the card's `base` (if it is empty: the worktree's last `Merge branch 'concerto/<plan-id>'` commit, else `base_sha`); if no → reset the card to `todo`.
 3. Make sure the integration branch `concerto/<plan-id>` exists; if not, create it from `base_sha`.
 4. Append a line to log.md noting this resume.
 

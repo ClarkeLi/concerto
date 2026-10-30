@@ -12,6 +12,9 @@
 ## Goal
 <the user's words + one or two sentences of clarified understanding>
 
+## Context
+<from recon, at most 15 lines: key files and what they hold, entry points, conventions not obvious from the code, how to run tests>
+
 ## Tasks
 
 ### T1 · <title>
@@ -28,6 +31,7 @@
 - verify: `<command>`
 - attempts: 0
 - branch:
+- base:              # commit the card's own diff starts from (executor's BASE)
 - result:
 
 ## Waves

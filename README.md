@@ -37,6 +37,7 @@ ideas → │ Opus         │  recon, task cards, dependency graph
 
 - **Dependency-driven scheduling.** A card starts the moment its dependencies are merged; no waiting for a whole wave. Cards that touch the same files are never run together.
 - **Pipelined, token-lean verification.** Every executor result is verified and merged as soon as it returns. Small, simple cards get a quick diff check by Opus; the rest are reviewed by an independent, read-only verifier that handles up to 3 cards per run, so you don't pay a fresh agent's startup cost for every card. A failed card is retried with the verifier's concrete fix instructions (twice), then Opus takes over.
+- **Fewer cold starts.** Recon is written once into the plan's `Context` section, so agents don't each re-survey the repo; serial chains of small cards become one card, and a card unblocked by a merge goes to the executor that already knows the code. Token use per agent is logged and summed by `/encore`.
 - **Multi-round.** Ideas you add while a round is running are picked up automatically in the next round, up to 3 rounds in a row, so you can keep capturing from a second terminal.
 - **Resumable.** All state lives in `.claude/work/<plan-id>/plan.md` and `log.md`; `/da-capo` resumes after an interruption.
 - **Safe by default.** Concerto never pushes and never forces. Work happens on `concerto/<plan-id>` and is merged back only when the tests pass; otherwise it stays there for you to inspect.
