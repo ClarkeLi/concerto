@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Concerto installer. Copies agents, skills, hook and templates into ~/.claude
 # (override with CLAUDE_HOME). Safe to re-run; existing differing files are
-# backed up with the suffix .bak-concerto, settings.json is never overwritten
-# (one hook entry is appended after a backup).
+# backed up with the suffix .bak-concerto (only once, so re-runs keep the
+# original), settings.json is never overwritten (one hook entry is appended
+# after a backup).
 set -euo pipefail
 
 SRC=$(cd "$(dirname "$0")" && pwd)
@@ -15,9 +16,9 @@ for tool in git jq; do
   command -v "$tool" >/dev/null || { echo "error: '$tool' is required but not installed" >&2; exit 1; }
 done
 
-put() { # put <src> <dest>: copy, backing up a differing existing file
+put() { # put <src> <dest>: copy, backing up a differing existing file (the first backup is kept)
   mkdir -p "$(dirname "$2")"
-  if [ -f "$2" ] && ! cmp -s "$1" "$2"; then cp "$2" "$2.bak-concerto"; echo "  backed up $2"; fi
+  if [ -f "$2" ] && ! cmp -s "$1" "$2" && [ ! -e "$2.bak-concerto" ]; then cp "$2" "$2.bak-concerto"; echo "  backed up $2"; fi
   cp "$1" "$2"
 }
 
